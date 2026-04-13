@@ -1,8 +1,10 @@
+import os
 from groq import Groq
 import json
 import re
-
-client = Groq(api_key="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")
+from dotenv import load_dotenv
+load_dotenv()
+client = Groq(api_key=os.getenv('GROQ_API_KEY'))
 
 def extract_booking_details(text):
     try:

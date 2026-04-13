@@ -33,8 +33,6 @@ ask_time_variations = [
 ]
 
 
-NGROK_BASE_URL = "https://simonne-nonsensate-semisuccessfully.ngrok-free.dev"
-
 conversation_state = {}
 
 class TestCallData(BaseModel):
@@ -510,7 +508,7 @@ async def view_bookings(request: Request):
     color:white;
 ">
     <div style="font-size:18px; font-weight:bold;">
-        Jarvis Admin
+        Receptionist AI Admin
     </div>
 
     <div>
