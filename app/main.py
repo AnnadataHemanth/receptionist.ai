@@ -5,7 +5,7 @@ from starlette.middleware.sessions import SessionMiddleware
 
 
 app = FastAPI(
-    title="Jarvis AI Assistant",
+    title="Receptionist AI",
     description="Voice-based AI assistant backend",
     version="0.1.0"
 )
