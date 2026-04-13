@@ -13,6 +13,6 @@ client = Client(account_sid, auth_token)
 def send_sms(to_number, message):
     client.messages.create(
         body=message,
-        from_=TWILIO_NUMBER,
+        from_=twilio_number,
         to=to_number
     )
