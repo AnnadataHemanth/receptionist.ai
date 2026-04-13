@@ -33,7 +33,7 @@ This project is an AI-powered voice assistant that automates appointment booking
 
 1️⃣ Clone the Repository
 
-git clone https://github.com/your-username/receptionist.ai.git
+git clone https://github.com/AnnadataHemanth/receptionist.ai.git
 cd receptionist.ai
 
 ---
