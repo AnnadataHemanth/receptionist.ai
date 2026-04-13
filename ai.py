@@ -1,98 +1,54 @@
-import os
 from groq import Groq
 import json
-import re
-from dotenv import load_dotenv
-load_dotenv()
-client = Groq(api_key=os.getenv('GROQ_API_KEY'))
+from app.core.config import GROQ_API_KEY
 
-def extract_booking_details(text):
+# Initialize Groq client
+client = Groq(api_key=GROQ_API_KEY)
+
+
+def extract_booking_details(user_speech: str):
     try:
-        response = client.chat.completions.create(
-            model="llama-3.1-8b-instant",
-            messages=[
-                {
-                    "role": "system",
-                    "content": "Extract booking info. Return ONLY JSON."
-                },
-                {
-                    "role": "user",
-                    "content": f"""
-                    Extract booking details from:
-                    "{text}"
+        prompt = f"""
+        Extract the following details from the user input:
 
-                    Return JSON:
-                    {{
-                        "intent": "book/cancel/unknown",
-                        "date": "",
-                        "time": "",
-                        "name": ""
-                    }}
-                    """
-                }
-            ],
+        - intent (book / cancel / unknown)
+        - date
+        - time
+        - name
+
+        Respond ONLY in JSON format like:
+        {{
+            "intent": "...",
+            "date": "...",
+            "time": "...",
+            "name": "..."
+        }}
+
+        User input: "{user_speech}"
+        """
+
+        response = client.chat.completions.create(
+            model="llama-3.1-8b-instant",  # stable free model
+            messages=[{"role": "user", "content": prompt}],
             temperature=0
         )
 
-        result = response.choices[0].message.content.strip()
+        raw_output = response.choices[0].message.content.strip()
+        print("RAW AI:", raw_output)
 
-# 🔥 remove markdown and extra text
-        if "```" in result:
-            result = result.split("```")[1]  # get inside block
+        # Clean JSON (remove ```json if present)
+        if raw_output.startswith("```"):
+            raw_output = raw_output.split("```")[1]
+            raw_output = raw_output.replace("json", "").strip()
 
-        if result.startswith("json"):
-            result = result.replace("json", "", 1).strip()
-
-# remove anything after closing }
-        if "}" in result:
-            result = result[:result.rfind("}")+1]
-        print("RAW AI:", result)
-
-        data = json.loads(result)
+        data = json.loads(raw_output)
+        return data
 
     except Exception as e:
         print("AI ERROR:", e)
-        data = {}
-
-    # 🔥 FALLBACK LOGIC (VERY IMPORTANT)
-    text_lower = text.lower()
-
-    # intent fallback
-    if not data.get("intent") or data.get("intent") == "unknown":
-        if any(word in text_lower for word in ["book", "appointment", "schedule"]):
-            data["intent"] = "book"
-
-    # date fallback
-    if not data.get("date"):
-        if "today" in text_lower:
-            data["date"] = "today"
-        elif "tomorrow" in text_lower:
-            data["date"] = "tomorrow"
-
-    # time fallback
-    if not data.get("time"):
-        match = re.search(r'\d{1,2}(:\d{2})?\s?(am|pm)', text_lower)
-        if match:
-            data["time"] = match.group()
-
-    # name fallback (basic)
-    if not data.get("name"):
-        if "my name is" in text_lower:
-            name = text_lower.split("my name is")[-1].strip().split()[0]
-            data["name"] = name.title()
-
-    intent = data.get("intent", "").lower()
-    
-    if intent not in ["book", "cancel"]:
-        intent = "unknown"
-
-    date = data.get("date") or None
-    time = data.get("time") or None
-    name = data.get("name") or None
-
-    return {
-        "intent": intent,
-        "date": date,
-        "time": time,
-        "name": name
+        return {
+            "intent": "unknown",
+            "date": None,
+            "time": None,
+            "name": None
         }

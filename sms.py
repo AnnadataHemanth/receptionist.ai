@@ -1,18 +1,22 @@
 from twilio.rest import Client
-from dotenv import load_dotenv
-import os
+from app.core.config import (
+    TWILIO_ACCOUNT_SID,
+    TWILIO_AUTH_TOKEN,
+    TWILIO_PHONE_NUMBER
+)
 
-load_dotenv()
+# Initialize Twilio client
+client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
-account_sid = os.getenv('TWILIO_ACCOUNT_SID')
-auth_token = os.getenv('TWILIO_AUTH_TOKEN')
-twilio_number = os.getenv('TWILIO_NUMBER')
-
-client = Client(account_sid, auth_token)
 
 def send_sms(to_number, message):
-    client.messages.create(
-        body=message,
-        from_=twilio_number,
-        to=to_number
-    )
+    try:
+        msg = client.messages.create(
+            body=message,
+            from_=TWILIO_PHONE_NUMBER,
+            to=to_number
+        )
+        return msg.sid
+    except Exception as e:
+        print("SMS Error:", e)
+        return None
