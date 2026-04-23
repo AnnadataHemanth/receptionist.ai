@@ -15,7 +15,11 @@ def extract_booking_details(user_speech: str):
         - date
         - time
         - name
-
+        Rules: 
+        - Name should be a proper human name (not phrases like "hey month" or "next week" )
+        - If unsure, return closest valid name
+        - Prefer common Indian names if phonetic match exists
+        - Do not include phrases like "my name is" , "this is" , "i am" in the name field
         Respond ONLY in JSON format like:
         {{
             "intent": "...",
