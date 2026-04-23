@@ -8,12 +8,43 @@ from fastapi.responses import HTMLResponse
 from fastapi.responses import RedirectResponse
 from fastapi import Form
 from ai import extract_booking_details
-
-
-
-
 import random
 
+def extract_name(user_speech: str):
+    if not user_speech:
+        return None
+
+    text = user_speech.lower().strip()
+
+    # Remove punctuation
+    text = re.sub(r"[^\w\s']", "", text)
+
+    # Patterns to extract name
+    patterns = [
+        r"my name is\s+([a-zA-Z]+)",
+        r"i am\s+([a-zA-Z]+)",
+        r"i'm\s+([a-zA-Z]+)",
+        r"this is\s+([a-zA-Z]+)",
+        r"name is\s+([a-zA-Z]+)"
+    ]
+
+    for pattern in patterns:
+        match = re.search(pattern, text)
+        if match:
+            return match.group(1).capitalize()
+
+    # If user just says name directly
+    words = text.split()
+
+    # Ignore common filler words
+    ignore_words = {"hello", "hi", "hey", "appointment", "book", "want"}
+
+    filtered = [w for w in words if w not in ignore_words]
+
+    if len(filtered) == 1:
+        return filtered[0].capitalize()
+
+    return None
 greetings = [
     "Hello! I’m Jarvis. Hemanth's A I Assistant, How can I assist you today?",
     "Hi there! This is Jarvis. Hemanth's A I Assistant, What can I help you with?",
@@ -40,10 +71,6 @@ class TestCallData(BaseModel):
     message: str
 
 router = APIRouter()
-
-@router.get("/health")
-def health_check():
-    return {"health": "ok"}
 
 @router.get("/hello")
 def hello():
@@ -150,6 +177,16 @@ async def process_speech(request: Request):
         ai_date = ai_data.get("date")
         ai_time = ai_data.get("time")
         ai_name = ai_data.get("name")
+        rule_name = extract_name(user_speech)
+
+        if rule_name:
+            ai_name = rule_name
+        elif ai_name:
+            ai_name = ai_name.lower().strip()
+            for phrase in ["my name is", "this is", "i am", "i'm"]:
+                if phrase in ai_name:
+                    ai_name = ai_name.split(phrase)[-1].strip()
+            ai_name = ai_name.split()[0].capitalize()
     except Exception:
         intent = "unknown"
         ai_date = None
